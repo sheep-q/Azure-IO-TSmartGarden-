@@ -5,7 +5,9 @@
 #include "AzureDpsClient.h"
 #include "CliMode.h"
 
-#include <LIS3DHTR.h>
+#include "DHT.h"
+#include "SPI.h"
+#include "TFT_eSPI.h"
 
 #include <rpcWiFiClientSecure.h>
 #include <PubSubClient.h>
@@ -20,7 +22,21 @@
 
 #define MQTT_PACKET_SIZE 1024
 
-LIS3DHTR<TwoWire> AccelSensor;
+//Definitions
+#define DHTPIN 0 //Define signal pin of DHT sensor 
+// #define DHTPIN PIN_WIRE_SCL //Use I2C port as Digital Port */
+#define DHTTYPE DHT11 //Define DHT sensor type 
+
+//Initializations
+DHT dht(DHTPIN, DHTTYPE); //Initializing DHT sensor
+TFT_eSPI tft; //Initializing TFT LCD
+TFT_eSprite spr = TFT_eSprite(&tft); //Initializing buffer
+
+// variable
+int temp;
+int humi;
+int light;
+int soil;
 
 const char* ROOT_CA_BALTIMORE =
 "-----BEGIN CERTIFICATE-----\n"
@@ -102,9 +118,6 @@ static void Log(const char* format, ...)
 ////////////////////////////////////////////////////////////////////////////////
 // Display
 
-#include <LovyanGFX.hpp>
-
-static LGFX tft;
 
 static void DisplayPrintf(const char* format, ...)
 {
@@ -114,7 +127,6 @@ static void DisplayPrintf(const char* format, ...)
     va_end(arg);
 
     Log("%s\n", str.c_str());
-    tft.printf("%s\n", str.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,10 +337,6 @@ static int ConnectToHub(az_iot_hub_client* iot_hub_client, const std::string& ho
 
 static az_result SendTelemetry()
 {
-    float accelX;
-    float accelY;
-    float accelZ;
-    AccelSensor.getAcceleration(&accelX, &accelY, &accelZ);
 
     int light;
     light = analogRead(WIO_LIGHT) * 100 / 1023;
@@ -344,14 +352,14 @@ static az_result SendTelemetry()
     char telemetry_payload[200];
     AZ_RETURN_IF_FAILED(az_json_writer_init(&json_builder, AZ_SPAN_FROM_BUFFER(telemetry_payload), NULL));
     AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(&json_builder));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_X)));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelX, 3));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_Y)));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelY, 3));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_Z)));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelZ, 3));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_LIGHT)));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("temp")));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, temp));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("humi")));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, humi));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("light")));
     AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, light));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("soil")));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, soil));
     AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(&json_builder));
     const az_span out_payload{ az_json_writer_get_bytes_used_in_destination(&json_builder) };
 
@@ -530,17 +538,7 @@ void setup()
     Serial.begin(115200);
 
     pinMode(WIO_BUZZER, OUTPUT);
-
-    ////////////////////
-    // Init display
-
-    tft.begin();
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextScroll(true);
-    tft.setTextColor(TFT_WHITE);
-    tft.setFont(&fonts::Font2);
-
-    ////////////////////
+    
     // Enter configuration mode
 
     pinMode(WIO_KEY_A, INPUT_PULLUP);
@@ -555,13 +553,6 @@ void setup()
         DisplayPrintf("In configuration mode");
         CliMode();
     }
-
-    ////////////////////
-    // Init sensor
-
-    AccelSensor.begin(Wire1);
-    AccelSensor.setOutputDataRate(LIS3DHTR_DATARATE_25HZ);
-    AccelSensor.setFullScaleRange(LIS3DHTR_RANGE_2G);
 
     ButtonInit();
 
@@ -584,6 +575,48 @@ void setup()
     ntp.begin();
 
     ////////////////////
+
+    dht.begin();
+
+    ///LCD setup
+    tft.begin();
+    tft.setRotation(3);
+
+    //Setting the title header 
+    tft.fillScreen(TFT_WHITE); //Fill background with white color
+    tft.fillRect(0,0,320,50,TFT_DARKGREEN); //Rectangle fill with dark green 
+    tft.setTextColor(TFT_WHITE); //Setting text color
+    tft.  setTextSize(3); //Setting text size 
+    tft.drawString("Smart Garden",50,15); //Drawing a text string 
+
+    tft.drawFastVLine(150,50,190,TFT_DARKGREEN); //Drawing verticle line
+    tft.drawFastHLine(0,140,320,TFT_DARKGREEN); //Drawing horizontal line
+
+  //Setting temperature
+    tft.setTextColor(TFT_BLACK);
+    tft.setTextSize(2);
+    tft.drawString("Temperature",10,65);
+    tft.setTextSize(3);
+    tft.drawString("C",90,95);
+
+  //Setting humidity
+    tft.setTextSize(2);
+    tft.drawString("Humidity",25,160);
+    tft.setTextSize(3);
+    tft.drawString("%RH",70,190);
+
+  //Setting soil moisture
+    
+    tft.setTextSize(2);
+    tft.drawString("Soil Moisture",160,65);
+    tft.setTextSize(3);
+    tft.drawString("%",240,95);
+  
+  //Setting light 
+    tft.setTextSize(2);
+    tft.drawString("Light",200,160);
+    tft.setTextSize(3);
+    tft.drawString("%",245,190);
     // Provisioning
 
 #if defined(USE_CLI) || defined(USE_DPS)
@@ -603,6 +636,49 @@ void setup()
 
 void loop()
 {
+    temp = dht.readTemperature();
+    humi = dht.readHumidity();
+    light = analogRead(WIO_LIGHT);
+    light = map(light,0,1023,0,100); //Map sensor values 
+    soil = analogRead(A1); //Store sensor values 
+    soil = map(soil,1023,400,0,100); //Map sensor values 
+
+    // sprite buffer for temperature
+    spr.createSprite(35, 25);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextSize(3);
+    spr.setTextColor(TFT_BLACK);
+    spr.drawNumber(temp, 0, 0);
+    spr.pushSprite(50,95);
+    spr.deleteSprite();
+
+    // sprite buffer for humi
+    spr.createSprite(35, 25);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextSize(3);
+    spr.setTextColor(TFT_BLACK);
+    spr.drawNumber(humi, 0, 0);
+    spr.pushSprite(30,190);
+    spr.deleteSprite();
+
+    // sprite buffer for light sensor
+    spr.createSprite(35, 25);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextSize(3);
+    spr.setTextColor(TFT_BLACK);
+    spr.drawNumber(light, 0, 0);
+    spr.pushSprite(200,190);
+    spr.deleteSprite();
+
+    // sprite buffer for soil moisture
+    spr.createSprite(35, 25);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextSize(3);
+    spr.setTextColor(TFT_BLACK);
+    spr.drawNumber(soil, 0, 0);
+    spr.pushSprite(200,95);
+    spr.deleteSprite();
+
     ButtonDoWork();
 
     static uint64_t reconnectTime;
