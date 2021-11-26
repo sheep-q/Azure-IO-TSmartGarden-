@@ -5,7 +5,12 @@
 #include "AzureDpsClient.h"
 #include "CliMode.h"
 
-#include <LIS3DHTR.h>
+// sheep
+#include "DHT.h"
+#include "SPI.h"
+#include "TFT_eSPI.h"
+// sheep
+// #include <LIS3DHTR.h>
 
 #include <rpcWiFiClientSecure.h>
 #include <PubSubClient.h>
@@ -20,30 +25,51 @@
 
 #define MQTT_PACKET_SIZE 1024
 
-LIS3DHTR<TwoWire> AccelSensor;
+// sheep
+// from here
 
-const char* ROOT_CA_BALTIMORE =
-"-----BEGIN CERTIFICATE-----\n"
-"MIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ\n"
-"RTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJlclRydXN0MSIwIAYD\n"
-"VQQDExlCYWx0aW1vcmUgQ3liZXJUcnVzdCBSb290MB4XDTAwMDUxMjE4NDYwMFoX\n"
-"DTI1MDUxMjIzNTkwMFowWjELMAkGA1UEBhMCSUUxEjAQBgNVBAoTCUJhbHRpbW9y\n"
-"ZTETMBEGA1UECxMKQ3liZXJUcnVzdDEiMCAGA1UEAxMZQmFsdGltb3JlIEN5YmVy\n"
-"VHJ1c3QgUm9vdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKMEuyKr\n"
-"mD1X6CZymrV51Cni4eiVgLGw41uOKymaZN+hXe2wCQVt2yguzmKiYv60iNoS6zjr\n"
-"IZ3AQSsBUnuId9Mcj8e6uYi1agnnc+gRQKfRzMpijS3ljwumUNKoUMMo6vWrJYeK\n"
-"mpYcqWe4PwzV9/lSEy/CG9VwcPCPwBLKBsua4dnKM3p31vjsufFoREJIE9LAwqSu\n"
-"XmD+tqYF/LTdB1kC1FkYmGP1pWPgkAx9XbIGevOF6uvUA65ehD5f/xXtabz5OTZy\n"
-"dc93Uk3zyZAsuT3lySNTPx8kmCFcB5kpvcY67Oduhjprl3RjM71oGDHweI12v/ye\n"
-"jl0qhqdNkNwnGjkCAwEAAaNFMEMwHQYDVR0OBBYEFOWdWTCCR1jMrPoIVDaGezq1\n"
-"BE3wMBIGA1UdEwEB/wQIMAYBAf8CAQMwDgYDVR0PAQH/BAQDAgEGMA0GCSqGSIb3\n"
-"DQEBBQUAA4IBAQCFDF2O5G9RaEIFoN27TyclhAO992T9Ldcw46QQF+vaKSm2eT92\n"
-"9hkTI7gQCvlYpNRhcL0EYWoSihfVCr3FvDB81ukMJY2GQE/szKN+OMY3EU/t3Wgx\n"
-"jkzSswF07r51XgdIGn9w/xZchMB5hbgF/X++ZRGjD8ACtPhSNzkE1akxehi/oCr0\n"
-"Epn3o0WC4zxe9Z2etciefC7IpJ5OCBRLbf1wbWsaY71k5h+3zvDyny67G7fyUIhz\n"
-"ksLi4xaNmjICq44Y3ekQEe5+NauQrz4wlHrQMz2nZQ/1/I6eYs9HRCwBXbsdtTLS\n"
-"R9I4LtD+gdwyah617jzV/OeBHRnDJELqYzmp\n"
-"-----END CERTIFICATE-----";
+// LIS3DHTR<TwoWire> AccelSensor;
+
+//Definitions
+#define DHTPIN 0 //Define signal pin of DHT sensor
+// #define DHTPIN PIN_WIRE_SCL //Use I2C port as Digital Port */
+#define DHTTYPE DHT11 //Define DHT sensor type
+
+//Initializations
+DHT dht(DHTPIN, DHTTYPE);            //Initializing DHT sensor
+TFT_eSPI tft;                        //Initializing TFT LCD
+TFT_eSprite spr = TFT_eSprite(&tft); //Initializing buffer
+
+// variable
+int temp;
+int humi;
+int light;
+int soil;
+
+// to here sheep
+
+const char *ROOT_CA_BALTIMORE =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ\n"
+    "RTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJlclRydXN0MSIwIAYD\n"
+    "VQQDExlCYWx0aW1vcmUgQ3liZXJUcnVzdCBSb290MB4XDTAwMDUxMjE4NDYwMFoX\n"
+    "DTI1MDUxMjIzNTkwMFowWjELMAkGA1UEBhMCSUUxEjAQBgNVBAoTCUJhbHRpbW9y\n"
+    "ZTETMBEGA1UECxMKQ3liZXJUcnVzdDEiMCAGA1UEAxMZQmFsdGltb3JlIEN5YmVy\n"
+    "VHJ1c3QgUm9vdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKMEuyKr\n"
+    "mD1X6CZymrV51Cni4eiVgLGw41uOKymaZN+hXe2wCQVt2yguzmKiYv60iNoS6zjr\n"
+    "IZ3AQSsBUnuId9Mcj8e6uYi1agnnc+gRQKfRzMpijS3ljwumUNKoUMMo6vWrJYeK\n"
+    "mpYcqWe4PwzV9/lSEy/CG9VwcPCPwBLKBsua4dnKM3p31vjsufFoREJIE9LAwqSu\n"
+    "XmD+tqYF/LTdB1kC1FkYmGP1pWPgkAx9XbIGevOF6uvUA65ehD5f/xXtabz5OTZy\n"
+    "dc93Uk3zyZAsuT3lySNTPx8kmCFcB5kpvcY67Oduhjprl3RjM71oGDHweI12v/ye\n"
+    "jl0qhqdNkNwnGjkCAwEAAaNFMEMwHQYDVR0OBBYEFOWdWTCCR1jMrPoIVDaGezq1\n"
+    "BE3wMBIGA1UdEwEB/wQIMAYBAf8CAQMwDgYDVR0PAQH/BAQDAgEGMA0GCSqGSIb3\n"
+    "DQEBBQUAA4IBAQCFDF2O5G9RaEIFoN27TyclhAO992T9Ldcw46QQF+vaKSm2eT92\n"
+    "9hkTI7gQCvlYpNRhcL0EYWoSihfVCr3FvDB81ukMJY2GQE/szKN+OMY3EU/t3Wgx\n"
+    "jkzSswF07r51XgdIGn9w/xZchMB5hbgF/X++ZRGjD8ACtPhSNzkE1akxehi/oCr0\n"
+    "Epn3o0WC4zxe9Z2etciefC7IpJ5OCBRLbf1wbWsaY71k5h+3zvDyny67G7fyUIhz\n"
+    "ksLi4xaNmjICq44Y3ekQEe5+NauQrz4wlHrQMz2nZQ/1/I6eYs9HRCwBXbsdtTLS\n"
+    "R9I4LtD+gdwyah617jzV/OeBHRnDJELqYzmp\n"
+    "-----END CERTIFICATE-----";
 
 WiFiClientSecure wifi_client;
 PubSubClient mqtt_client(wifi_client);
@@ -53,47 +79,49 @@ NTP ntp(wifi_udp);
 std::string HubHost;
 std::string DeviceId;
 
-#define AZ_RETURN_IF_FAILED(exp) \
-  do \
-  { \
-    az_result const _result = (exp); \
-    if (az_result_failed(_result)) \
-    { \
-      return _result; \
-    } \
-  } while (0)
+#define AZ_RETURN_IF_FAILED(exp)         \
+    do                                   \
+    {                                    \
+        az_result const _result = (exp); \
+        if (az_result_failed(_result))   \
+        {                                \
+            return _result;              \
+        }                                \
+    } while (0)
 
 ////////////////////////////////////////////////////////////////////////////////
-// 
+//
 
 #define DLM "\r\n"
 
-static String StringVFormat(const char* format, va_list arg)
+static String StringVFormat(const char *format, va_list arg)
 {
     const int len = vsnprintf(nullptr, 0, format, arg);
     char str[len + 1];
     vsnprintf(str, sizeof(str), format, arg);
 
-    return String{ str };
+    return String{str};
 }
 
-static void Abort(const char* format, ...)
+static void Abort(const char *format, ...)
 {
     va_list arg;
     va_start(arg, format);
-    String str{ StringVFormat(format, arg) };
+    String str{StringVFormat(format, arg)};
     va_end(arg);
 
     Serial.print(String::format("ABORT: %s" DLM, str.c_str()));
 
-    while (true) {}
+    while (true)
+    {
+    }
 }
 
-static void Log(const char* format, ...)
+static void Log(const char *format, ...)
 {
     va_list arg;
     va_start(arg, format);
-    String str{ StringVFormat(format, arg) };
+    String str{StringVFormat(format, arg)};
     va_end(arg);
 
     Serial.print(str);
@@ -102,19 +130,19 @@ static void Log(const char* format, ...)
 ////////////////////////////////////////////////////////////////////////////////
 // Display
 
-#include <LovyanGFX.hpp>
+//sheep
+// #include <LovyanGFX.hpp>
+// static LGFX tft;
+// .
 
-static LGFX tft;
-
-static void DisplayPrintf(const char* format, ...)
+static void DisplayPrintf(const char *format, ...)
 {
     va_list arg;
     va_start(arg, format);
-    String str{ StringVFormat(format, arg) };
+    String str{StringVFormat(format, arg)};
     va_end(arg);
 
     Log("%s\n", str.c_str());
-    tft.printf("%s\n", str.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,10 +161,11 @@ static const int ButtonNumber = 3;
 static AceButton Buttons[ButtonNumber];
 static bool ButtonsClicked[ButtonNumber];
 
-static void ButtonEventHandler(AceButton* button, uint8_t eventType, uint8_t buttonState)
+static void ButtonEventHandler(AceButton *button, uint8_t eventType, uint8_t buttonState)
 {
     const uint8_t id = button->getId();
-    if (ButtonNumber <= id) return;
+    if (ButtonNumber <= id)
+        return;
 
     switch (eventType)
     {
@@ -164,11 +193,12 @@ static void ButtonInit()
     Buttons[static_cast<int>(ButtonId::CENTER)].init(WIO_KEY_B, HIGH, static_cast<uint8_t>(ButtonId::CENTER));
     Buttons[static_cast<int>(ButtonId::LEFT)].init(WIO_KEY_C, HIGH, static_cast<uint8_t>(ButtonId::LEFT));
 
-    ButtonConfig* buttonConfig = ButtonConfig::getSystemButtonConfig();
+    ButtonConfig *buttonConfig = ButtonConfig::getSystemButtonConfig();
     buttonConfig->setEventHandler(ButtonEventHandler);
     buttonConfig->setFeature(ButtonConfig::kFeatureClick);
 
-    for (int i = 0; i < ButtonNumber; ++i) ButtonsClicked[i] = false;
+    for (int i = 0; i < ButtonNumber; ++i)
+        ButtonsClicked[i] = false;
 }
 
 static void ButtonDoWork()
@@ -185,15 +215,16 @@ static void ButtonDoWork()
 static AzureDpsClient DpsClient;
 static unsigned long DpsPublishTimeOfQueryStatus = 0;
 
-static void MqttSubscribeCallbackDPS(char* topic, byte* payload, unsigned int length);
+static void MqttSubscribeCallbackDPS(char *topic, byte *payload, unsigned int length);
 
-static int RegisterDeviceToDPS(const std::string& endpoint, const std::string& idScope, const std::string& registrationId, const std::string& symmetricKey, const uint64_t& expirationEpochTime, std::string* hubHost, std::string* deviceId)
+static int RegisterDeviceToDPS(const std::string &endpoint, const std::string &idScope, const std::string &registrationId, const std::string &symmetricKey, const uint64_t &expirationEpochTime, std::string *hubHost, std::string *deviceId)
 {
-    std::string endpointAndPort{ endpoint };
+    std::string endpointAndPort{endpoint};
     endpointAndPort += ":";
     endpointAndPort += std::to_string(8883);
 
-    if (DpsClient.Init(endpointAndPort, idScope, registrationId) != 0) return -1;
+    if (DpsClient.Init(endpointAndPort, idScope, registrationId) != 0)
+        return -1;
 
     const std::string mqttClientId = DpsClient.GetMqttClientId();
     const std::string mqttUsername = DpsClient.GetMqttUsername();
@@ -218,7 +249,8 @@ static int RegisterDeviceToDPS(const std::string& endpoint, const std::string& i
     mqtt_client.setServer(endpoint.c_str(), 8883);
     mqtt_client.setCallback(MqttSubscribeCallbackDPS);
     DisplayPrintf("Connecting to Azure IoT Hub DPS...");
-    if (!mqtt_client.connect(mqttClientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str())) return -2;
+    if (!mqtt_client.connect(mqttClientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str()))
+        return -2;
 
     mqtt_client.subscribe(registerSubscribeTopic.c_str());
     mqtt_client.publish(registerPublishTopic.c_str(), "{payload:{\"modelId\":\"" IOT_CONFIG_MODEL_ID "\"}}");
@@ -234,7 +266,8 @@ static int RegisterDeviceToDPS(const std::string& endpoint, const std::string& i
         }
     }
 
-    if (!DpsClient.IsAssigned()) return -3;
+    if (!DpsClient.IsAssigned())
+        return -3;
 
     mqtt_client.disconnect();
 
@@ -248,9 +281,9 @@ static int RegisterDeviceToDPS(const std::string& endpoint, const std::string& i
     return 0;
 }
 
-static void MqttSubscribeCallbackDPS(char* topic, byte* payload, unsigned int length)
+static void MqttSubscribeCallbackDPS(char *topic, byte *payload, unsigned int length)
 {
-    Log("Subscribe:" DLM " %s" DLM " %.*s" DLM, topic, length, (const char*)payload);
+    Log("Subscribe:" DLM " %s" DLM " %.*s" DLM, topic, length, (const char *)payload);
 
     if (DpsClient.RegisterSubscribeWork(topic, std::vector<uint8_t>(payload, payload + length)) != 0)
     {
@@ -272,36 +305,41 @@ static void MqttSubscribeCallbackDPS(char* topic, byte* payload, unsigned int le
 
 static az_iot_hub_client HubClient;
 
-static int SendCommandResponse(az_iot_hub_client_method_request* request, uint16_t status, az_span response);
-static void MqttSubscribeCallbackHub(char* topic, byte* payload, unsigned int length);
+static int SendCommandResponse(az_iot_hub_client_method_request *request, uint16_t status, az_span response);
+static void MqttSubscribeCallbackHub(char *topic, byte *payload, unsigned int length);
 
-static int ConnectToHub(az_iot_hub_client* iot_hub_client, const std::string& host, const std::string& deviceId, const std::string& symmetricKey, const uint64_t& expirationEpochTime)
+static int ConnectToHub(az_iot_hub_client *iot_hub_client, const std::string &host, const std::string &deviceId, const std::string &symmetricKey, const uint64_t &expirationEpochTime)
 {
     static std::string deviceIdCache;
     deviceIdCache = deviceId;
 
-    const az_span hostSpan{ az_span_create((uint8_t*)&host[0], host.size()) };
-    const az_span deviceIdSpan{ az_span_create((uint8_t*)&deviceIdCache[0], deviceIdCache.size()) };
+    const az_span hostSpan{az_span_create((uint8_t *)&host[0], host.size())};
+    const az_span deviceIdSpan{az_span_create((uint8_t *)&deviceIdCache[0], deviceIdCache.size())};
     az_iot_hub_client_options options = az_iot_hub_client_options_default();
     options.model_id = AZ_SPAN_LITERAL_FROM_STR(IOT_CONFIG_MODEL_ID);
-    if (az_result_failed(az_iot_hub_client_init(iot_hub_client, hostSpan, deviceIdSpan, &options))) return -1;
+    if (az_result_failed(az_iot_hub_client_init(iot_hub_client, hostSpan, deviceIdSpan, &options)))
+        return -1;
 
     char mqttClientId[128];
     size_t client_id_length;
-    if (az_result_failed(az_iot_hub_client_get_client_id(iot_hub_client, mqttClientId, sizeof(mqttClientId), &client_id_length))) return -4;
+    if (az_result_failed(az_iot_hub_client_get_client_id(iot_hub_client, mqttClientId, sizeof(mqttClientId), &client_id_length)))
+        return -4;
 
     char mqttUsername[256];
-    if (az_result_failed(az_iot_hub_client_get_user_name(iot_hub_client, mqttUsername, sizeof(mqttUsername), NULL))) return -5;
+    if (az_result_failed(az_iot_hub_client_get_user_name(iot_hub_client, mqttUsername, sizeof(mqttUsername), NULL)))
+        return -5;
 
     char mqttPassword[300];
     uint8_t signatureBuf[256];
     az_span signatureSpan = az_span_create(signatureBuf, sizeof(signatureBuf));
     az_span signatureValidSpan;
-    if (az_result_failed(az_iot_hub_client_sas_get_signature(iot_hub_client, expirationEpochTime, signatureSpan, &signatureValidSpan))) return -2;
+    if (az_result_failed(az_iot_hub_client_sas_get_signature(iot_hub_client, expirationEpochTime, signatureSpan, &signatureValidSpan)))
+        return -2;
     const std::vector<uint8_t> signature(az_span_ptr(signatureValidSpan), az_span_ptr(signatureValidSpan) + az_span_size(signatureValidSpan));
     const std::string encryptedSignature = GenerateEncryptedSignature(symmetricKey, signature);
-    az_span encryptedSignatureSpan = az_span_create((uint8_t*)&encryptedSignature[0], encryptedSignature.size());
-    if (az_result_failed(az_iot_hub_client_sas_get_password(iot_hub_client, expirationEpochTime, encryptedSignatureSpan, AZ_SPAN_EMPTY, mqttPassword, sizeof(mqttPassword), NULL))) return -3;
+    az_span encryptedSignatureSpan = az_span_create((uint8_t *)&encryptedSignature[0], encryptedSignature.size());
+    if (az_result_failed(az_iot_hub_client_sas_get_password(iot_hub_client, expirationEpochTime, encryptedSignatureSpan, AZ_SPAN_EMPTY, mqttPassword, sizeof(mqttPassword), NULL)))
+        return -3;
 
     Log("Hub:" DLM);
     Log(" Host = %s" DLM, host.c_str());
@@ -315,7 +353,8 @@ static int ConnectToHub(az_iot_hub_client* iot_hub_client, const std::string& ho
     mqtt_client.setServer(host.c_str(), 8883);
     mqtt_client.setCallback(MqttSubscribeCallbackHub);
 
-    if (!mqtt_client.connect(mqttClientId, mqttUsername, mqttPassword)) return -6;
+    if (!mqtt_client.connect(mqttClientId, mqttUsername, mqttPassword))
+        return -6;
 
     mqtt_client.subscribe(AZ_IOT_HUB_CLIENT_METHODS_SUBSCRIBE_TOPIC);
     mqtt_client.subscribe(AZ_IOT_HUB_CLIENT_C2D_SUBSCRIBE_TOPIC);
@@ -325,10 +364,14 @@ static int ConnectToHub(az_iot_hub_client* iot_hub_client, const std::string& ho
 
 static az_result SendTelemetry()
 {
+    // sheep
+    // from here
+    /*
     float accelX;
     float accelY;
     float accelZ;
     AccelSensor.getAcceleration(&accelX, &accelY, &accelZ);
+    */
 
     int light;
     light = analogRead(WIO_LIGHT) * 100 / 1023;
@@ -341,19 +384,26 @@ static az_result SendTelemetry()
     }
 
     az_json_writer json_builder;
+    /* sheep modified
+    char telemetry_payload[80];
+    */
     char telemetry_payload[200];
     AZ_RETURN_IF_FAILED(az_json_writer_init(&json_builder, AZ_SPAN_FROM_BUFFER(telemetry_payload), NULL));
     AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(&json_builder));
+    /* sheep
     AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_X)));
     AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelX, 3));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_Y)));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelY, 3));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_Z)));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelZ, 3));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_LIGHT)));
+    */
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("temp")));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, temp));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("humi")));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, humi));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("light")));
     AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, light));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("soil")));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, soil));
     AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(&json_builder));
-    const az_span out_payload{ az_json_writer_get_bytes_used_in_destination(&json_builder) };
+    const az_span out_payload{az_json_writer_get_bytes_used_in_destination(&json_builder)};
 
     static int sendCount = 0;
     if (!mqtt_client.publish(telemetry_topic, az_span_ptr(out_payload), az_span_size(out_payload), false))
@@ -400,7 +450,7 @@ static az_result SendButtonTelemetry(ButtonId id)
         return AZ_ERROR_ARG;
     }
     AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(&json_builder));
-    const az_span out_payload{ az_json_writer_get_bytes_used_in_destination(&json_builder) };
+    const az_span out_payload{az_json_writer_get_bytes_used_in_destination(&json_builder)};
 
     if (!mqtt_client.publish(telemetry_topic, az_span_ptr(out_payload), az_span_size(out_payload), false))
     {
@@ -414,7 +464,7 @@ static az_result SendButtonTelemetry(ButtonId id)
     return AZ_OK;
 }
 
-static void HandleCommandMessage(az_span payload, az_iot_hub_client_method_request* command_request)
+static void HandleCommandMessage(az_span payload, az_iot_hub_client_method_request *command_request)
 {
     int command_res_code = 200;
     az_result rc = AZ_OK;
@@ -468,7 +518,7 @@ static void HandleCommandMessage(az_span payload, az_iot_hub_client_method_reque
     }
 }
 
-static int SendCommandResponse(az_iot_hub_client_method_request* request, uint16_t status, az_span response)
+static int SendCommandResponse(az_iot_hub_client_method_request *request, uint16_t status, az_span response)
 {
     az_result rc = AZ_OK;
     // Get the response topic to publish the command response
@@ -480,7 +530,7 @@ static int SendCommandResponse(az_iot_hub_client_method_request* request, uint16
     }
 
     Log("Status: %u\tPayload: '", status);
-    char* payload_char = (char*)az_span_ptr(response);
+    char *payload_char = (char *)az_span_ptr(response);
     if (payload_char != NULL)
     {
         for (int32_t i = 0; i < az_span_size(response); i++)
@@ -499,7 +549,7 @@ static int SendCommandResponse(az_iot_hub_client_method_request* request, uint16
     return rc;
 }
 
-static void MqttSubscribeCallbackHub(char* topic, byte* payload, unsigned int length)
+static void MqttSubscribeCallbackHub(char *topic, byte *payload, unsigned int length)
 {
     az_span topic_span = az_span_create((uint8_t *)topic, strlen(topic));
     az_iot_hub_client_method_request command_request;
@@ -531,16 +581,6 @@ void setup()
 
     pinMode(WIO_BUZZER, OUTPUT);
 
-    ////////////////////
-    // Init display
-
-    tft.begin();
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextScroll(true);
-    tft.setTextColor(TFT_WHITE);
-    tft.setFont(&fonts::Font2);
-
-    ////////////////////
     // Enter configuration mode
 
     pinMode(WIO_KEY_A, INPUT_PULLUP);
@@ -550,22 +590,20 @@ void setup()
 
     if (digitalRead(WIO_KEY_A) == LOW &&
         digitalRead(WIO_KEY_B) == LOW &&
-        digitalRead(WIO_KEY_C) == LOW   )
+        digitalRead(WIO_KEY_C) == LOW)
     {
         DisplayPrintf("In configuration mode");
         CliMode();
     }
 
-    ////////////////////
-    // Init sensor
-
-    AccelSensor.begin(Wire1);
-    AccelSensor.setOutputDataRate(LIS3DHTR_DATARATE_25HZ);
-    AccelSensor.setFullScaleRange(LIS3DHTR_RANGE_2G);
-
     ButtonInit();
 
     ////////////////////
+    /*
+    AccelSensor.begin(Wire1)
+    AccelSensor.setOutputDataRate(LIS3DHTR_DATARATE_25HZ);
+    AccelSensor.setFullScaleRange
+    */
     // Connect Wi-Fi
 
     DisplayPrintf("Connecting to SSID: %s", IOT_CONFIG_WIFI_SSID);
@@ -574,16 +612,61 @@ void setup()
         Log(".");
         WiFi.begin(IOT_CONFIG_WIFI_SSID, IOT_CONFIG_WIFI_PASSWORD);
         delay(500);
-    }
-    while (WiFi.status() != WL_CONNECTED);
+    } while (WiFi.status() != WL_CONNECTED);
     DisplayPrintf("Connected");
 
     ////////////////////
     // Sync time server
-    
+
     ntp.begin();
 
     ////////////////////
+    // sheep
+    // from here
+
+    dht.begin();
+
+    ///LCD setup
+    tft.begin();
+    tft.setRotation(1);
+
+    //Setting the title header
+    tft.fillScreen(TFT_WHITE);                  //Fill background with white color
+    tft.fillRect(0, 0, 320, 50, TFT_DARKGREEN); //Rectangle fill with dark green
+    tft.setTextColor(TFT_WHITE);                //Setting text color
+    tft.setTextSize(3);                         //Setting text size
+    tft.drawString("Smart Garden", 50, 15);     //Drawing a text string
+
+    tft.drawFastVLine(150, 50, 190, TFT_DARKGREEN); //Drawing verticle line
+    tft.drawFastHLine(0, 140, 320, TFT_DARKGREEN);  //Drawing horizontal line
+
+    //Setting temperature
+    tft.setTextColor(TFT_BLACK);
+    tft.setTextSize(2);
+    tft.drawString("Temperature", 10, 65);
+    tft.setTextSize(3);
+    tft.drawString("C", 90, 95);
+
+    //Setting humidity
+    tft.setTextSize(2);
+    tft.drawString("Humidity", 25, 160);
+    tft.setTextSize(3);
+    tft.drawString("%RH", 70, 190);
+
+    //Setting soil moisture
+
+    tft.setTextSize(2);
+    tft.drawString("Soil Moisture", 160, 65);
+    tft.setTextSize(3);
+    tft.drawString("%", 240, 95);
+
+    //Setting light
+    tft.setTextSize(2);
+    tft.drawString("Light", 200, 160);
+    tft.setTextSize(3);
+    tft.drawString("%", 245, 190);
+
+    // end.
     // Provisioning
 
 #if defined(USE_CLI) || defined(USE_DPS)
@@ -603,6 +686,53 @@ void setup()
 
 void loop()
 {
+    // sheep
+    // from here
+    temp = dht.readTemperature();
+    humi = dht.readHumidity();
+    light = analogRead(WIO_LIGHT);
+    light = map(light, 0, 1023, 0, 100); //Map sensor values
+    soil = analogRead(A1);               //Store sensor values
+    soil = map(soil, 1023, 400, 0, 100); //Map sensor values 
+
+    // sprite buffer for temperature
+    spr.createSprite(35, 25);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextSize(3);
+    spr.setTextColor(TFT_BLACK);
+    spr.drawNumber(temp, 0, 0);
+    spr.pushSprite(50, 95);
+    spr.deleteSprite();
+
+    // sprite buffer for humi
+    spr.createSprite(35, 25);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextSize(3);
+    spr.setTextColor(TFT_BLACK);
+    spr.drawNumber(humi, 0, 0);
+    spr.pushSprite(30, 190);
+    spr.deleteSprite();
+
+    // sprite buffer for light sensor
+    spr.createSprite(35, 25);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextSize(3);
+    spr.setTextColor(TFT_BLACK);
+    spr.drawNumber(light, 0, 0);
+    spr.pushSprite(200, 190);
+    spr.deleteSprite();
+
+    // sprite buffer for soil moisture
+    spr.createSprite(35, 25);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextSize(3);
+    spr.setTextColor(TFT_BLACK);
+    spr.drawNumber(soil, 0, 0);
+    spr.pushSprite(200, 95);
+    spr.deleteSprite();
+
+    // end .
+
     ButtonDoWork();
 
     static uint64_t reconnectTime;
