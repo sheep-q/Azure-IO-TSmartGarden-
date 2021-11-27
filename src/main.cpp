@@ -10,7 +10,7 @@
 #include "SPI.h"
 #include "TFT_eSPI.h"
 // sheep
-// #include <LIS3DHTR.h>
+#include <LIS3DHTR.h>
 
 #include <rpcWiFiClientSecure.h>
 #include <PubSubClient.h>
@@ -28,7 +28,7 @@
 // sheep
 // from here
 
-// LIS3DHTR<TwoWire> AccelSensor;
+LIS3DHTR<TwoWire> AccelSensor;
 
 //Definitions
 #define DHTPIN 0 //Define signal pin of DHT sensor
@@ -45,6 +45,7 @@ int temp;
 int humi;
 int light;
 int soil;
+int location;
 
 // to here sheep
 
@@ -154,8 +155,8 @@ using namespace ace_button;
 enum class ButtonId
 {
     RIGHT = 0,
-    CENTER,
-    LEFT,
+    CENTER = 1,
+    LEFT = 2,
 };
 static const int ButtonNumber = 3;
 static AceButton Buttons[ButtonNumber];
@@ -366,12 +367,10 @@ static az_result SendTelemetry()
 {
     // sheep
     // from here
-    /*
     float accelX;
     float accelY;
     float accelZ;
     AccelSensor.getAcceleration(&accelX, &accelY, &accelZ);
-    */
 
     int light;
     light = analogRead(WIO_LIGHT) * 100 / 1023;
@@ -394,6 +393,17 @@ static az_result SendTelemetry()
     AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_X)));
     AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelX, 3));
     */
+
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_X)));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelX, 3));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_Y)));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelY, 3));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_Z)));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelZ, 3));
+
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("location")));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, location));
+
     AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("temp")));
     AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, temp));
     AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("humi")));
@@ -569,6 +579,7 @@ static void MqttSubscribeCallbackHub(char *topic, byte *payload, unsigned int le
 
 void setup()
 {
+    location = 1;
     ////////////////////
     // Load storage
 
@@ -583,6 +594,12 @@ void setup()
 
     // Enter configuration mode
 
+    pinMode(WIO_5S_UP, INPUT_PULLUP);
+    pinMode(WIO_5S_DOWN, INPUT_PULLUP);
+    pinMode(WIO_5S_LEFT, INPUT_PULLUP);
+    pinMode(WIO_5S_RIGHT, INPUT_PULLUP);
+    pinMode(WIO_5S_PRESS, INPUT_PULLUP);
+
     pinMode(WIO_KEY_A, INPUT_PULLUP);
     pinMode(WIO_KEY_B, INPUT_PULLUP);
     pinMode(WIO_KEY_C, INPUT_PULLUP);
@@ -596,14 +613,12 @@ void setup()
         CliMode();
     }
 
+    AccelSensor.begin(Wire1);
+    AccelSensor.setOutputDataRate(LIS3DHTR_DATARATE_25HZ);
+    AccelSensor.setFullScaleRange(LIS3DHTR_RANGE_2G);
+
     ButtonInit();
 
-    ////////////////////
-    /*
-    AccelSensor.begin(Wire1)
-    AccelSensor.setOutputDataRate(LIS3DHTR_DATARATE_25HZ);
-    AccelSensor.setFullScaleRange
-    */
     // Connect Wi-Fi
 
     DisplayPrintf("Connecting to SSID: %s", IOT_CONFIG_WIFI_SSID);
@@ -614,7 +629,13 @@ void setup()
         delay(500);
     } while (WiFi.status() != WL_CONNECTED);
     DisplayPrintf("Connected");
-
+    analogWrite(WIO_BUZZER, 128);
+    delay(500);
+    analogWrite(WIO_BUZZER, 0);
+    delay(100);
+    analogWrite(WIO_BUZZER, 128);
+    delay(500);
+    analogWrite(WIO_BUZZER, 0);
     ////////////////////
     // Sync time server
 
@@ -693,7 +714,7 @@ void loop()
     light = analogRead(WIO_LIGHT);
     light = map(light, 0, 1023, 0, 100); //Map sensor values
     soil = analogRead(A1);               //Store sensor values
-    soil = map(soil, 1023, 400, 0, 100); //Map sensor values 
+    soil = map(soil, 1023, 400, 0, 100); //Map sensor values
 
     // sprite buffer for temperature
     spr.createSprite(35, 25);
@@ -749,6 +770,15 @@ void loop()
         }
 
         DisplayPrintf("> SUCCESS.");
+
+        analogWrite(WIO_BUZZER, 128);
+        delay(500);
+        analogWrite(WIO_BUZZER, 0);
+        delay(100);
+        analogWrite(WIO_BUZZER, 128);
+        delay(500);
+        analogWrite(WIO_BUZZER, 0);
+
         reconnectTime = now + TOKEN_LIFESPAN * 0.85;
     }
     else
@@ -769,12 +799,46 @@ void loop()
             nextTelemetrySendTime = millis() + TELEMETRY_FREQUENCY_MILLISECS;
         }
 
+        // sheep
+        /*
+        if (digitalRead(WIO_KEY_A) == LOW) {
+            ButtonsClicked[0] = true;
+        }
+         else if (digitalRead(WIO_KEY_B) == LOW) {
+            ButtonsClicked[1] = true;
+         }
+        else if (digitalRead(WIO_KEY_C) == LOW) {
+            ButtonsClicked[2] = true;
+        }
+        */
+
+        if (digitalRead(WIO_5S_UP) == LOW)
+        {
+        }
+        else if (digitalRead(WIO_5S_DOWN) == LOW)
+        {
+        }
+        else if (digitalRead(WIO_5S_LEFT) == LOW)
+        {
+            // ButtonsClicked[0] = true;
+        }
+        else if (digitalRead(WIO_5S_RIGHT) == LOW)
+        {
+            // ButtonsClicked[2] = true;
+        }
+        else if (digitalRead(WIO_5S_PRESS) == LOW)
+        {
+            location += 1;
+            delay(300);
+        }
+
         for (int i = 0; i < ButtonNumber; ++i)
         {
             if (ButtonsClicked[i])
             {
                 SendButtonTelemetry(static_cast<ButtonId>(i));
                 ButtonsClicked[i] = false;
+                //delay(1000);
             }
         }
     }
