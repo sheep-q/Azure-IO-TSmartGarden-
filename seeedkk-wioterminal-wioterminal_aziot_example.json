@@ -1,13 +1,81 @@
 {
-    "@id": "dtmi:local:wioterminal_aziot_example;5",
+    "@id": "dtmi:local:wioterminal_aziot_device_01",
     "@type": "Interface",
     "@context": "dtmi:dtdl:context;2",
-    "displayName": "Seeed Wio Terminal",
+    "displayName": "Device 01",
     "description": {
         "en": "X,Y,Z-axis, brightness and button click polling result. Buzzer can be beeped by settings on cloud.",
         "ja": "加速度X,Y,Zと光量を定期的に通知します。また、右、中央、左ボタンのクリックも通知します。クラウドからの指示でブザーが鳴ります。"
     },
     "contents": [{
+            "@type": [
+                "Telemetry",
+                "Transportion"
+            ],
+            "name": "location",
+            "unit": "gForce",
+            "displayName": {
+                "en": "Location",
+                "ja": "加速度 X"
+            },
+            "description": {
+                "en": "X-axis value of accelerometer.",
+                "ja": "加速度センサーのX値です。"
+            },
+            "schema": "double"
+        }, {
+            "@type": [
+                "Telemetry",
+                "Acceleration"
+            ],
+            "name": "accelX",
+            "unit": "gForce",
+            "displayName": {
+                "en": "Acceleration X",
+                "ja": "加速度 X"
+            },
+            "description": {
+                "en": "X-axis value of accelerometer.",
+                "ja": "加速度センサーのX値です。"
+            },
+            "schema": "integer"
+        },
+        {
+            "@type": [
+                "Telemetry",
+                "Acceleration"
+            ],
+            "name": "accelY",
+            "unit": "gForce",
+            "displayName": {
+                "en": "Acceleration Y",
+                "ja": "加速度 Y"
+            },
+            "description": {
+                "en": "Y-axis value of accelerometer.",
+                "ja": "加速度センサーのY値です。"
+            },
+            "schema": "double"
+        },
+        {
+            "@type": [
+                "Telemetry",
+                "Acceleration"
+            ],
+            "name": "accelZ",
+            "unit": "gForce",
+            "displayName": {
+                "en": "Acceleration Z",
+                "ja": "加速度 Z"
+            },
+            "description": {
+                "en": "Z-axis value of accelerometer.",
+                "ja": "加速度センサーのZ値です。"
+            },
+            "schema": "double"
+        },
+
+        {
             "@type": [
                 "Telemetry",
                 "DHTT11"
