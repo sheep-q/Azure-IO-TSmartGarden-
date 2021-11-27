@@ -1,8 +1,8 @@
 {
-    "@id": "dtmi:local:wioterminal_aziot_device_01",
+    "@id": "dtmi:local:wioterminal_aziot_device_02;2",
     "@type": "Interface",
     "@context": "dtmi:dtdl:context;2",
-    "displayName": "Device 01",
+    "displayName": "Device 02",
     "description": {
         "en": "X,Y,Z-axis, brightness and button click polling result. Buzzer can be beeped by settings on cloud.",
         "ja": "加速度X,Y,Zと光量を定期的に通知します。また、右、中央、左ボタンのクリックも通知します。クラウドからの指示でブザーが鳴ります。"
