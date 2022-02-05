@@ -656,8 +656,7 @@ void setup()
     tft.fillRect(0, 0, 320, 50, TFT_DARKGREEN); //Rectangle fill with dark green
     tft.setTextColor(TFT_WHITE);                //Setting text color
     tft.setTextSize(3);                         //Setting text size
-    tft.drawString("Smart Garden", 50, 15);     //Drawing a text string
-
+    tft.drawString("Wio Hust", 90, 15);     //Drawing a text string
     tft.drawFastVLine(150, 50, 190, TFT_DARKGREEN); //Drawing verticle line
     tft.drawFastHLine(0, 140, 320, TFT_DARKGREEN);  //Drawing horizontal line
 
@@ -677,9 +676,9 @@ void setup()
     //Setting soil moisture
 
     tft.setTextSize(2);
-    tft.drawString("Soil Moisture", 160, 65);
+    tft.drawString("Location", 190, 65);
     tft.setTextSize(3);
-    tft.drawString("%", 240, 95);
+    tft.drawString("/8", 242, 95);
 
     //Setting light
     tft.setTextSize(2);
@@ -743,13 +742,13 @@ void loop()
     spr.pushSprite(200, 190);
     spr.deleteSprite();
 
-    // sprite buffer for soil moisture
+    // sprite buffer for location
     spr.createSprite(35, 25);
     spr.fillSprite(TFT_WHITE);
     spr.setTextSize(3);
     spr.setTextColor(TFT_BLACK);
-    spr.drawNumber(soil, 0, 0);
-    spr.pushSprite(200, 95);
+    spr.drawNumber(location, 0, 0);
+    spr.pushSprite(205, 95);
     spr.deleteSprite();
 
     // end .
@@ -772,11 +771,7 @@ void loop()
         DisplayPrintf("> SUCCESS.");
 
         analogWrite(WIO_BUZZER, 128);
-        delay(500);
-        analogWrite(WIO_BUZZER, 0);
-        delay(100);
-        analogWrite(WIO_BUZZER, 128);
-        delay(500);
+        delay(1000);
         analogWrite(WIO_BUZZER, 0);
 
         reconnectTime = now + TOKEN_LIFESPAN * 0.85;
@@ -812,23 +807,27 @@ void loop()
         }
         */
 
-        if (digitalRead(WIO_5S_UP) == LOW)
+        // if (digitalRead(WIO_5S_UP) == LOW)
+        // {
+        // }
+        // else if (digitalRead(WIO_5S_DOWN) == LOW)
+        // {
+        // }
+        // else if (digitalRead(WIO_5S_LEFT) == LOW)
+        // {
+        //     // ButtonsClicked[0] = true;
+        // }
+        // else if (digitalRead(WIO_5S_RIGHT) == LOW)
+        // {
+        //     // ButtonsClicked[2] = true;
+        // }
+        // else
+        if (digitalRead(WIO_5S_PRESS) == LOW)
         {
-        }
-        else if (digitalRead(WIO_5S_DOWN) == LOW)
-        {
-        }
-        else if (digitalRead(WIO_5S_LEFT) == LOW)
-        {
-            // ButtonsClicked[0] = true;
-        }
-        else if (digitalRead(WIO_5S_RIGHT) == LOW)
-        {
-            // ButtonsClicked[2] = true;
-        }
-        else if (digitalRead(WIO_5S_PRESS) == LOW)
-        {
-            location += 1;
+            location = (location + 1) % 9;
+            if (location == 0) {
+                location = 1;
+            }
             delay(300);
         }
 
