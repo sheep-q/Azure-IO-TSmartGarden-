@@ -30,15 +30,15 @@
 
 LIS3DHTR<TwoWire> AccelSensor;
 
-//Definitions
-#define DHTPIN 0 //Define signal pin of DHT sensor
+// Definitions
+#define DHTPIN 0 // Define signal pin of DHT sensor
 // #define DHTPIN PIN_WIRE_SCL //Use I2C port as Digital Port */
-#define DHTTYPE DHT11 //Define DHT sensor type
+#define DHTTYPE DHT11 // Define DHT sensor type
 
-//Initializations
-DHT dht(DHTPIN, DHTTYPE);            //Initializing DHT sensor
-TFT_eSPI tft;                        //Initializing TFT LCD
-TFT_eSprite spr = TFT_eSprite(&tft); //Initializing buffer
+// Initializations
+DHT dht(DHTPIN, DHTTYPE);            // Initializing DHT sensor
+TFT_eSPI tft;                        // Initializing TFT LCD
+TFT_eSprite spr = TFT_eSprite(&tft); // Initializing buffer
 
 // variable
 int temp;
@@ -46,7 +46,10 @@ int humi;
 int light;
 int soil;
 int location;
-
+float accelX;
+float accelY;
+float accelZ;
+float accel;
 // to here sheep
 
 const char *ROOT_CA_BALTIMORE =
@@ -131,10 +134,10 @@ static void Log(const char *format, ...)
 ////////////////////////////////////////////////////////////////////////////////
 // Display
 
-//sheep
-// #include <LovyanGFX.hpp>
-// static LGFX tft;
-// .
+// sheep
+//  #include <LovyanGFX.hpp>
+//  static LGFX tft;
+//  .
 
 static void DisplayPrintf(const char *format, ...)
 {
@@ -243,7 +246,7 @@ static int RegisterDeviceToDPS(const std::string &endpoint, const std::string &i
     Log(" Registration id = %s" DLM, registrationId.c_str());
     Log(" MQTT client id = %s" DLM, mqttClientId.c_str());
     Log(" MQTT username = %s" DLM, mqttUsername.c_str());
-    //Log(" MQTT password = %s" DLM, mqttPassword.c_str());
+    // Log(" MQTT password = %s" DLM, mqttPassword.c_str());
 
     wifi_client.setCACert(ROOT_CA_BALTIMORE);
     mqtt_client.setBufferSize(MQTT_PACKET_SIZE);
@@ -347,7 +350,7 @@ static int ConnectToHub(az_iot_hub_client *iot_hub_client, const std::string &ho
     Log(" Device id = %s" DLM, deviceIdCache.c_str());
     Log(" MQTT client id = %s" DLM, mqttClientId);
     Log(" MQTT username = %s" DLM, mqttUsername);
-    //Log(" MQTT password = %s" DLM, mqttPassword);
+    // Log(" MQTT password = %s" DLM, mqttPassword);
 
     wifi_client.setCACert(ROOT_CA_BALTIMORE);
     mqtt_client.setBufferSize(MQTT_PACKET_SIZE);
@@ -367,9 +370,6 @@ static az_result SendTelemetry()
 {
     // sheep
     // from here
-    float accelX;
-    float accelY;
-    float accelZ;
     AccelSensor.getAcceleration(&accelX, &accelY, &accelZ);
 
     int light;
@@ -400,6 +400,8 @@ static az_result SendTelemetry()
     AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelY, 3));
     AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR(TELEMETRY_ACCEL_Z)));
     AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accelZ, 3));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("accel")));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_double(&json_builder, accel, 4));
 
     AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, AZ_SPAN_LITERAL_FROM_STR("location")));
     AZ_RETURN_IF_FAILED(az_json_writer_append_int32(&json_builder, location));
@@ -504,9 +506,26 @@ static void HandleCommandMessage(az_span payload, az_iot_hub_client_method_reque
             }
 
             // Invoke command
-            analogWrite(WIO_BUZZER, 128);
-            delay(duration);
-            analogWrite(WIO_BUZZER, 0);
+            if (duration == 777000)
+            {
+                location = (location + 1) % 9;
+                if (location == 0)
+                {
+                    location = 1;
+                }
+            }
+            else if (duration > 15000)
+            {
+                analogWrite(WIO_BUZZER, 128);
+                delay(15);
+                analogWrite(WIO_BUZZER, 0);
+            }
+            else
+            {
+                analogWrite(WIO_BUZZER, 128);
+                delay(duration);
+                analogWrite(WIO_BUZZER, 0);
+            }
 
             int rc;
             if (az_result_failed(rc = SendCommandResponse(command_request, command_res_code, AZ_SPAN_LITERAL_FROM_STR("{}"))))
@@ -647,40 +666,40 @@ void setup()
 
     dht.begin();
 
-    ///LCD setup
+    /// LCD setup
     tft.begin();
     tft.setRotation(1);
 
-    //Setting the title header
-    tft.fillScreen(TFT_WHITE);                  //Fill background with white color
-    tft.fillRect(0, 0, 320, 50, TFT_DARKGREEN); //Rectangle fill with dark green
-    tft.setTextColor(TFT_WHITE);                //Setting text color
-    tft.setTextSize(3);                         //Setting text size
-    tft.drawString("Wio Hust", 90, 15);     //Drawing a text string
-    tft.drawFastVLine(150, 50, 190, TFT_DARKGREEN); //Drawing verticle line
-    tft.drawFastHLine(0, 140, 320, TFT_DARKGREEN);  //Drawing horizontal line
+    // Setting the title header
+    tft.fillScreen(TFT_WHITE);                      // Fill background with white color
+    tft.fillRect(0, 0, 320, 50, TFT_DARKGREEN);     // Rectangle fill with dark green
+    tft.setTextColor(TFT_WHITE);                    // Setting text color
+    tft.setTextSize(3);                             // Setting text size
+    tft.drawString("Wio Hust", 90, 15);             // Drawing a text string
+    tft.drawFastVLine(150, 50, 190, TFT_DARKGREEN); // Drawing verticle line
+    tft.drawFastHLine(0, 140, 320, TFT_DARKGREEN);  // Drawing horizontal line
 
-    //Setting temperature
+    // Setting temperature
     tft.setTextColor(TFT_BLACK);
     tft.setTextSize(2);
     tft.drawString("Temperature", 10, 65);
     tft.setTextSize(3);
     tft.drawString("C", 90, 95);
 
-    //Setting humidity
+    // Setting humidity
     tft.setTextSize(2);
     tft.drawString("Humidity", 25, 160);
     tft.setTextSize(3);
     tft.drawString("%RH", 70, 190);
 
-    //Setting soil moisture
+    // Setting soil moisture
 
     tft.setTextSize(2);
     tft.drawString("Location", 190, 65);
     tft.setTextSize(3);
     tft.drawString("/8", 242, 95);
 
-    //Setting light
+    // Setting light
     tft.setTextSize(2);
     tft.drawString("Light", 200, 160);
     tft.setTextSize(3);
@@ -711,9 +730,10 @@ void loop()
     temp = dht.readTemperature();
     humi = dht.readHumidity();
     light = analogRead(WIO_LIGHT);
-    light = map(light, 0, 1023, 0, 100); //Map sensor values
-    soil = analogRead(A1);               //Store sensor values
-    soil = map(soil, 1023, 400, 0, 100); //Map sensor values
+    light = map(light, 0, 1023, 0, 100); // Map sensor values
+    soil = analogRead(A1);               // Store sensor values
+    soil = map(soil, 1023, 400, 0, 100); // Map sensor values
+    accel = sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
 
     // sprite buffer for temperature
     spr.createSprite(35, 25);
@@ -825,7 +845,8 @@ void loop()
         if (digitalRead(WIO_5S_PRESS) == LOW)
         {
             location = (location + 1) % 9;
-            if (location == 0) {
+            if (location == 0)
+            {
                 location = 1;
             }
             delay(300);
@@ -837,7 +858,7 @@ void loop()
             {
                 SendButtonTelemetry(static_cast<ButtonId>(i));
                 ButtonsClicked[i] = false;
-                //delay(1000);
+                // delay(1000);
             }
         }
     }

@@ -4,8 +4,8 @@
     "@context": "dtmi:dtdl:context;2",
     "displayName": "Device 02",
     "description": {
-        "en": "X,Y,Z-axis, brightness and button click polling result. Buzzer can be beeped by settings on cloud.",
-        "ja": "加速度X,Y,Zと光量を定期的に通知します。また、右、中央、左ボタンのクリックも通知します。クラウドからの指示でブザーが鳴ります。"
+        "en": "Đồ án tốt nghiệp kì 2022.1 Giải pháp giám sát hàng hoá để đảm báo chất lượng sản phẩm và phát triển ứng dụng Wio Hust",
+        "ja": ""
     },
     "contents": [{
             "@type": [
@@ -16,11 +16,11 @@
             "unit": "gForce",
             "displayName": {
                 "en": "Location",
-                "ja": "加速度 X"
+                "ja": ""
             },
             "description": {
-                "en": "X-axis value of accelerometer.",
-                "ja": "加速度センサーのX値です。"
+                "en": "địa điểm giao hàng",
+                "ja": ""
             },
             "schema": "double"
         }, {
@@ -32,11 +32,11 @@
             "unit": "gForce",
             "displayName": {
                 "en": "Acceleration X",
-                "ja": "加速度 X"
+                "ja": ""
             },
             "description": {
                 "en": "X-axis value of accelerometer.",
-                "ja": "加速度センサーのX値です。"
+                "ja": ""
             },
             "schema": "integer"
         },
@@ -49,11 +49,11 @@
             "unit": "gForce",
             "displayName": {
                 "en": "Acceleration Y",
-                "ja": "加速度 Y"
+                "ja": ""
             },
             "description": {
                 "en": "Y-axis value of accelerometer.",
-                "ja": "加速度センサーのY値です。"
+                "ja": ""
             },
             "schema": "double"
         },
@@ -66,15 +66,31 @@
             "unit": "gForce",
             "displayName": {
                 "en": "Acceleration Z",
-                "ja": "加速度 Z"
+                "ja": ""
             },
             "description": {
                 "en": "Z-axis value of accelerometer.",
-                "ja": "加速度センサーのZ値です。"
+                "ja": ""
             },
             "schema": "double"
         },
-
+        {
+            "@type": [
+                "Telemetry",
+                "Acceleration"
+            ],
+            "name": "accel",
+            "unit": "gForce",
+            "displayName": {
+                "en": "accel",
+                "ja": ""
+            },
+            "description": {
+                "en": "values of IMU",
+                "ja": ""
+            },
+            "schema": "double"
+        },
         {
             "@type": [
                 "Telemetry",
