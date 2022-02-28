@@ -1,31 +1,55 @@
-# Welcome to wioterminal-aziot-example
+# Đồ án tốt nghiệp 2022-1 Đai học Bách Khoa Hà Nội - 20174138 - Wio Hust
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](/LICENSE)
 
 This application shows you how to connect your [Wio Terminal](https://www.seeedstudio.com/Wio-Terminal-p-4509.html) from Seeed to [Azure IoT Hub](https://azure.microsoft.com/services/iot-hub). It is built on top of the [Azure SDK for Embedded C](https://github.com/Azure/azure-sdk-for-c), a small footprint, easy-to-port library for communicating with Azure services.
 
+## Author
+
+👤 **Nguyễn Văn Quang - 20174138**
+
+- Trường: Điện - Điện Tử. Đại học Bách Khoa Hà Nội
+- Ngành: KT Điều khiển & Tự động hoá
+- Khoá: K62
+- Facebook: [@quangSheep](https://www.facebook.com/quangSheep/)
+- LinkedIn: [@nguyễn-quang](https://www.linkedin.com/in/nguy%E1%BB%85n-quang-515565188/)
+- Github: [@nguyễn-quang](https://github.com/QuangNguyeen)
+
+👤 **Benjamin Cabé**
+
+- Website: https://blog.benjamin-cabe.com
+- Twitter: [@kartben](https://twitter.com/kartben)
+- Github: [@kartben](https://github.com/kartben)
+- LinkedIn: [@benjamincabe](https://linkedin.com/in/benjamincabe)
+
+👤 **Seeed K.K.**
+
+- Website: https://www.seeed.co.jp/
+- Twitter: [@SeeedJP](https://twitter.com/SeeedJP)
+
 As the Wio Terminal is one of PlatformIO's (many!) supported platforms, the application is conveniently made available as a PlatformIO project. This means that you don't have to worry about installing the [multiple Arduino libraries](https://wiki.seeedstudio.com/Wio-Terminal-Network-Overview/) the Wio Terminal requires for Wi-Fi & TLS, and you don't need to manually install any other third-party library either! All dependencies are automatically fetched from Github by the PlatformIO Library Manager.
 
-  - [Supported device attestation methods](#supported-device-attestation-methods)
-  - [Update the Wi-Fi Firmware](#update-the-wi-fi-firmware)
-  - [Configure directly connect to Azure IoT Hub](#configure-directly-connect-to-azure-iot-hub)
-  - [Configure use provisioning to connect to Azure IoT Hub](#configure-use-provisioning-to-connect-to-azure-iot-hub)
-  - [Running the application](#running-the-application)
-  - [Testing the application](#testing-the-application)
-  - [A few words on the Azure SDK for Embedded C and how it's been ported to Wio Terminal](#a-few-words-on-the-azure-sdk-for-embedded-c-and-how-its-been-ported-to-wio-terminal)
+- [Supported device attestation methods](#supported-device-attestation-methods)
+- [Update the Wi-Fi Firmware](#update-the-wi-fi-firmware)
+- [Configure directly connect to Azure IoT Hub](#configure-directly-connect-to-azure-iot-hub)
+- [Configure use provisioning to connect to Azure IoT Hub](#configure-use-provisioning-to-connect-to-azure-iot-hub)
+- [Running the application](#running-the-application)
+- [Testing the application](#testing-the-application)
+- [A few words on the Azure SDK for Embedded C and how it's been ported to Wio Terminal](#a-few-words-on-the-azure-sdk-for-embedded-c-and-how-its-been-ported-to-wio-terminal)
 
 ## Supported device attestation methods
 
 The following table summarizes supported device attestation/authentication methods :
 
 | Service       | Enrollment | Authentication           | Support status |
-|:--------------|:-----------|:-------------------------|:---------------|
+| :------------ | :--------- | :----------------------- | :------------- |
 | Azure IoT Hub | -          | Symmetric Key            | Need recompile |
 | Azure IoT Hub | -          | X.509 Self-Signed        | Not Supported  |
 | Azure IoT Hub | -          | X.509 CA-Signed          | Not Supported  |
-| Azure IoT DPS | Group      | Symmetric Key            | **Supported** |
+| Azure IoT DPS | Group      | Symmetric Key            | **Supported**  |
 | Azure IoT DPS | Group      | CA Certificate           | Not Supported  |
 | Azure IoT DPS | Group      | Intermediate Certificate | Not Supported  |
-| Azure IoT DPS | Individual | Symmetric Key            | **Supported** |
+| Azure IoT DPS | Individual | Symmetric Key            | **Supported**  |
 | Azure IoT DPS | Individual | X.509                    | Not Supported  |
 | Azure IoT DPS | Individual | TPM                      | Not Supported  |
 
@@ -43,8 +67,8 @@ Please follow instruction at [Wio Terminal's network overview page](https://wiki
 ### Configure Azure IoT Hub
 
 1. Create an Azure IoT Hub.
-See [here](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision#create-an-iot-hub).
-Do "Create an IoT hub" section only.
+   See [here](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision#create-an-iot-hub).
+   Do "Create an IoT hub" section only.
 1. Select **IoT devices** page in your Azure IoT Hub on Azure portal.
 1. Select **+New**.
 1. Input **Device ID** and click **Save** button.
@@ -66,17 +90,17 @@ Do "Create an IoT hub" section only.
 ### Create Azure IoT Hub
 
 1. Create an Azure IoT Hub.
-See [here](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision#create-an-iot-hub).
-Do "Create an IoT hub" section only.
+   See [here](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision#create-an-iot-hub).
+   Do "Create an IoT hub" section only.
 
 ### Configure Azure IoT Hub DPS
 
 1. Create an Azure IoT Hub DPS.
-See [here](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision#create-a-new-iot-hub-device-provisioning-service).
-Do "Create a new IoT Hub Device Provisioning Service" section only.
+   See [here](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision#create-a-new-iot-hub-device-provisioning-service).
+   Do "Create a new IoT Hub Device Provisioning Service" section only.
 1. Link Azure IoT Hub and Azure IoT Hub DPS.
-See [here](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision#link-the-iot-hub-and-your-device-provisioning-service).
-Do "Link the IoT hub and your Device Provisioning Service" section only.
+   See [here](https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision#link-the-iot-hub-and-your-device-provisioning-service).
+   Do "Link the IoT hub and your Device Provisioning Service" section only.
 1. Select **Manage enrollments** page in your Azure IoT Hub DPS on Azure portal.
 1. Select **+Add individual enrollment**.
 1. Change X.509 at **Mechanism** to **Symmetric Key**.
@@ -97,12 +121,12 @@ Do "Link the IoT hub and your Device Provisioning Service" section only.
 
 ## Running the application
 
-Use the [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide) (VS Code extension) or the [PlatformIO command-line interface](https://platformio.org/install/cli) to deploy the application to your Wio Terminal. 
+Use the [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide) (VS Code extension) or the [PlatformIO command-line interface](https://platformio.org/install/cli) to deploy the application to your Wio Terminal.
 
-Once running, the application will connect to IoT Hub and: 
+Once running, the application will connect to IoT Hub and:
 
-* send **telemetry**—the acceleration values from the 3-axis acceleration sensor—every 2 second.
-* listen to a `ringBuzzer` **command** that, when triggered from the Cloud will... ring the buzzer! The duration is provided as a command parameter.
+- send **telemetry**—the acceleration values from the 3-axis acceleration sensor—every 2 second.
+- listen to a `ringBuzzer` **command** that, when triggered from the Cloud will... ring the buzzer! The duration is provided as a command parameter.
 
 ## Testing the Application
 
@@ -126,25 +150,11 @@ Note: As of today, the Azure SDK for Embedded C is still being actively develope
 
 You can read more on the Azure IoT client library [here](https://github.com/Azure/azure-sdk-for-c/tree/master/sdk/docs/iot#azure-iot-clients), but in a nutshell, here's what had to be done to get the Wio Terminal connected:
 
-* As this application uses symmetric keys to authenticate, a [security token](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-tokens) needs to be generated.
-  * Since the generated token has an expiration date (typically set to a few hours in the future), **we need to know the current date and time**. We use an [NTP](https://github.com/sstaub/NTP) library to get the current time from a time server.
-  * The token includes an **HMAC-SHA256 signature string that needs to be base64-encoded**. Luckily, the [recommended WiFi+TLS stack](https://wiki.seeedstudio.com/Wio-Terminal-Network-Overview/#libraries-installation) of the Wio Terminal already includes Mbed TLS, making it relatively simple to compute HMAC signatures (ex. `mbedtls_md_hmac_starts`) and perform base64 encoding (ex. `mbedtls_base64_encode`).
-* The Azure IoT client libraries help with crafting MQTT topics that follow the [Azure IoT conventions](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support), but you still need to **provide your own MQTT library**. In fact, that is a major difference with the historical Azure IoT C SDK, for which the MQTT implementation was baked into it. Since it is widely supported and just worked out-of-the-box, this application uses the [`PubSubClient`](https://github.com/knolleary/pubsubclient) MQTT library from [Nick O'Leary](https://github.com/knolleary).
-* And of course, one has to implement their own **application logic**. For this application, this meant using the Wio Terminal's acceleration sensor driver to get acceleration data every 2 seconds, or hooking up the `ringBuzzer` command to actual embedded code that rings the buzzer.
-
-## Author
-
-👤 **Benjamin Cabé**
-
-* Website: https://blog.benjamin-cabe.com
-* Twitter: [@kartben](https://twitter.com/kartben)
-* Github: [@kartben](https://github.com/kartben)
-* LinkedIn: [@benjamincabe](https://linkedin.com/in/benjamincabe)
-
-👤 **Seeed K.K.**
-
-* Website: https://www.seeed.co.jp/
-* Twitter: [@SeeedJP](https://twitter.com/SeeedJP)
+- As this application uses symmetric keys to authenticate, a [security token](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-tokens) needs to be generated.
+  - Since the generated token has an expiration date (typically set to a few hours in the future), **we need to know the current date and time**. We use an [NTP](https://github.com/sstaub/NTP) library to get the current time from a time server.
+  - The token includes an **HMAC-SHA256 signature string that needs to be base64-encoded**. Luckily, the [recommended WiFi+TLS stack](https://wiki.seeedstudio.com/Wio-Terminal-Network-Overview/#libraries-installation) of the Wio Terminal already includes Mbed TLS, making it relatively simple to compute HMAC signatures (ex. `mbedtls_md_hmac_starts`) and perform base64 encoding (ex. `mbedtls_base64_encode`).
+- The Azure IoT client libraries help with crafting MQTT topics that follow the [Azure IoT conventions](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support), but you still need to **provide your own MQTT library**. In fact, that is a major difference with the historical Azure IoT C SDK, for which the MQTT implementation was baked into it. Since it is widely supported and just worked out-of-the-box, this application uses the [`PubSubClient`](https://github.com/knolleary/pubsubclient) MQTT library from [Nick O'Leary](https://github.com/knolleary).
+- And of course, one has to implement their own **application logic**. For this application, this meant using the Wio Terminal's acceleration sensor driver to get acceleration data every 2 seconds, or hooking up the `ringBuzzer` command to actual embedded code that rings the buzzer.
 
 ## 🤝 Contributing
 
@@ -163,5 +173,6 @@ Copyright &copy; 2020 Seeed K.K.
 
 This project is [MIT](/LICENSE) licensed.
 
-***
+---
+
 _This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
