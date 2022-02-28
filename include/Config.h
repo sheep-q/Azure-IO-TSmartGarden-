@@ -34,7 +34,7 @@
 
 #endif // USE_CLI
 
-#define IOT_CONFIG_MODEL_ID "dtmi:local:wioterminal_aziot_device_01"
+#define IOT_CONFIG_MODEL_ID "dtmi:local:wioterminal_aziot_device_02;2"
 
 #define TOKEN_LIFESPAN 3600
 
